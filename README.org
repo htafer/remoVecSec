@@ -7,13 +7,12 @@ and on stderr warnings regarding vector sequences not removed.
 
 
 
-* TODO add more cases where vector are removed
------
+** TODO TODO: add more cases where vector are removed
 
-Pull requests are encouraged!
+Forking and feedback encouraged
 
-More Resources
---------------
+** More Resources
+
 
 - vecscreen https://www.ncbi.nlm.nih.gov/tools/vecscreen/, https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
 
