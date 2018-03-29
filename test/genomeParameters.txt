@@ -1,0 +1,15 @@
+### STAR   --runMode genomeGenerate   --genomeDir ../test   --genomeFastaFiles ../test/test.fasta   
+versionGenome	20201
+genomeFastaFiles	../test/test.fasta 
+genomeSAindexNbases	14
+genomeChrBinNbits	18
+genomeSAsparseD	1
+sjdbOverhang	0
+sjdbFileChrStartEnd	- 
+sjdbGTFfile	-
+sjdbGTFchrPrefix	-
+sjdbGTFfeatureExon	exon
+sjdbGTFtagExonParentTranscript	transcript_id
+sjdbGTFtagExonParentGene	gene_id
+sjdbInsertSave	Basic
+genomeFileSizes	1048576 6521546

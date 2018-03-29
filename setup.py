@@ -12,28 +12,28 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = 'fastqori'
+NAME = 'remoVecSec'
 DESCRIPTION = 'My short description for my project.'
-URL = 'https://github.com/htafer/fastqori'
+URL = 'https://github.com/htafer/remoVecSec'
 EMAIL = 'htafer@gmail.com'
-AUTHOR = 'Scho'
+AUTHOR = 'blake yeast'
 REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '0.0.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    # 'requests', 'maya', 'records',
+     'biopython',
 ]
 
 # The rest you shouldn't have to touch too much :)
-# ------------------------------------------------
-# Except, perhaps the License and Trove Classifiers!
-# If you do change the License, remember to change the Trove Classifier for that!
+# ------------------------------------------------ Except, perhaps the
+# License and Trove Classifiers!  If you do change the License,
+# remember to change the Trove Classifier for that!
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-# Import the README and use it as the long-description.
-# Note: this will only work if 'README.rst' is present in your MANIFEST.in file!
+# Import the README and use it as the long-description.  Note: this
+# will only work if 'README.rst' is present in your MANIFEST.in file!
 with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = '\n' + f.read()
 
