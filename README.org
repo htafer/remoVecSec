@@ -18,7 +18,7 @@ Forking and feedback encouraged
 
 ** Usage
 
-src_python{python3 remoVecSec/remoVecSec.py -g `pwd`/test/MA6037.fasta   -d UniVec  > test/MA6037.fasta.cor}
+~python3 remoVecSec/remoVecSec.py -g `pwd`/test/MA6037.fasta   -d UniVec  > test/MA6037.fasta.cor~
 
 ** License
 
