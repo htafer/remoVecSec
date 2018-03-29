@@ -16,8 +16,11 @@ Forking and feedback encouraged
 
 - vecscreen https://www.ncbi.nlm.nih.gov/tools/vecscreen/, https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
 
-License
--------
+** Usage
+
+python3 remoVecSec/remoVecSec.py -g `pwd`/test/MA6037.fasta   -d UniVec  > test/MA6037.fasta.cor
+
+** License
 
 This is free and unencumbered software released into the public domain.
 
