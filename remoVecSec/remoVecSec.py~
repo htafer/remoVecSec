@@ -167,13 +167,8 @@ def correctfasta(vectint, genome):
 
 
 def main(arguments):
-    parser = argparse.ArgumentParser(
-        description="remoVecSec is a small wrapper around vecscreen that allows to remove\n"
-        + "vector contamination in assembled genome. It takes as input a genome\n"
-        + "file, a vecscreen database and returns on stdout the corrected genome\n"
-        + "and on stderr warnings regarding vector sequences not removed.",
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
+    parser = argparse.ArgumentParser(description="remoVecSec bla bla",
+                                     formatter_class = argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--genomefile', '-g', help="Genome file",
                         type=str, required=True)
     parser.add_argument('--dbvec',
@@ -182,6 +177,9 @@ def main(arguments):
                         type=str, required=True)
     args = parser.parse_args(arguments)
 
+    # f = runVecSecPipe(sys.argv[1], sys.argv[2])
+    # vectint = parseVecSec(f)
+    # correctfasta(vectint, sys.argv[1])
     f = runVecSecPipe(args.genomefile, args.dbvec)
     vectint = parseVecSec(f)
     correctfasta(vectint, args.genomefile)
