@@ -2,11 +2,13 @@
 of interest and running the mapping process
 
 """
+import pprint
 import io
 import sys
 import subprocess
 import re
 from Bio import SeqIO
+from Bio.Seq import Seq
 import logging
 import argparse
 
@@ -47,7 +49,7 @@ def parseVecSec(vecsec_output):
         decoded = line
         # Regexp for contig
         contig = re.compile(">Vector")
-        # Regexp for finding lines with starting with numbers
+        # Regexp for finding lines starting with numbers
         numberstart = re.compile("^[0-9]")
         # Regexp for no match
         nohits = re.compile("No hits found")
@@ -85,7 +87,8 @@ def parseVecSec(vecsec_output):
                         # go to next line
                     currentline = vecsec_output.readline()
                 # key, value of hash with intervals and contigname
-                vectint[contigname] = intervals
+                # fuseintervals
+                vectint[contigname] = fuseinterval(intervals)
     # return hash to next function for processing
     return vectint
 
@@ -104,24 +107,31 @@ def fuseinterval(intervals):
     # sort based on the coordinate of the end of the interval
     intervals = sorted(intervals,
                        key=lambda interval: interval[1])
+
     # go through interval, fuse the one that are adjacent
     fuseintervals=[]
     previnterval = intervals[0]
     # check adjacent intervals and merge them, return a list of intervals
     for interval in intervals[1:]:
         # adjacency: end of previous + 1 = start of current interval
-        if previnterval[1]+1 == interval[0]:
+        if int(previnterval[1]+1) == int(interval[0]):
             previnterval[1] = interval[1]
         else:
             fuseintervals.append(previnterval)
             previnterval = interval
     # last element has to be appended too
     fuseintervals.append(previnterval)
-    # return fused intervals
+    # reverse sort the interval, so that by
+    # removing the vector sequence, the coordinates are
+    # still actual.
+    fuseintervals = sorted(fuseintervals,
+                           key=lambda interval: interval[1], reverse=True)
+
+    # check how many intervals
     return fuseintervals
 
 
-def correctfasta(vectint, genome):
+def correctfasta(vectint, records):
     """
     Given a set of vector interval and a genome correct remove the
     sequence of the genomes overlapping with the vector intervals, if
@@ -132,26 +142,27 @@ def correctfasta(vectint, genome):
     Return: corrected genome sequence. Check the warning to see if
     regions were not corrected
     """
-    # read fastafile
-    records = SeqIO.parse(genome, "fasta")
-    # open file genome"+.corrected"
+
     # go through each sequence in genome file
     for record in records:
-        if record.id in vectint:
+        if record in vectint:
             # if contig in vectint
             # fuse interval
-            fuseintervals = fuseinterval(vectint[record.id])
+            fuseintervals = vectint[record]
             # begin or end +/- 10
-            recordlength = len(record.seq)
+            recordlength = len(records[record].seq)
+            # We cannot work directly on the records hash
+            # duplicate the sequence, and modify it
+            recordseq = records[record]
             for interval in fuseintervals:
                 if interval[1] < 100:
                     # correct sequence at the begining
-                    record.seq = record.seq[interval[1]:]
-                    SeqIO.write(record,sys.stdout,"fasta")
+                    recordseq = recordseq[interval[1]:]
+                    # SeqIO.write(record,sys.stdout,"fasta")
                 elif interval[0] > recordlength-100:
                     # correct sequence if at the end
-                    record.seq = record.seq[:interval[0]]
-                    SeqIO.write(record,sys.stdout,"fasta")
+                    recordseq = recordseq[:interval[0]]
+                    # SeqIO.write(record,sys.stdout,"fasta")
                 else:
                     # in the other case, return a warning and let the
                     # user decide if the genome should be corrected or
@@ -160,10 +171,14 @@ def correctfasta(vectint, genome):
                     logging.warning("interval "
                                     + intervalstring
                                     + " on contig "
-                                    + record.id
+                                    + record
                                     + " is too far from the contig's end and will not be processed")
+            print(">"+recordseq.id)    
+            print(recordseq.seq)
         else:
-            SeqIO.write(record, sys.stdout, "fasta")
+            print(">"+record)
+            print(records[record].seq)
+
 
 
 def main(arguments):
@@ -183,8 +198,9 @@ def main(arguments):
     args = parser.parse_args(arguments)
 
     f = runVecSecPipe(args.genomefile, args.dbvec)
+    records = SeqIO.index(args.genomefile, "fasta")
     vectint = parseVecSec(f)
-    correctfasta(vectint, args.genomefile)
+    correctfasta(vectint, records)
 
 
 if __name__ == '__main__':

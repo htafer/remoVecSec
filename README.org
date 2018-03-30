@@ -5,7 +5,16 @@ vector contamination in assembled genome. It takes as input a genome
 file, a vecscreen database and returns on stdout the corrected genome
 and on stderr warnings regarding vector sequences not removed.
 
+** TODO Some vecscreen results have valid intervals at the begining and end of the sequences!
+We solve that by 
++ keeping the intervals in three dictionaries for each contig:
 
+ contig->begin [][][] for [].end < 100
+ contig->end [][][]   for the rest
+ contig->center [][][] for   [].begin > 100 
+
+We remove the sequence by taking the max over all element (Begining) or min (End).
+We do not touch the intervals that are located in the middle of the sequences.
 
 ** TODO TODO: add more cases where vector are removed
 
