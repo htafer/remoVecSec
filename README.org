@@ -13,7 +13,7 @@ We solve that by
  contig->end [][][]   for the rest
  contig->center [][][] for   [].begin > 100 
 
-We remove the sequence by taking the max over all element (Begining) or min (End).
+We remove the sequence by taking the max over all element (Beginning) or min (End).
 We do not touch the intervals that are located in the middle of the sequences.
 
 ** TODO TODO: add more cases where vector are removed

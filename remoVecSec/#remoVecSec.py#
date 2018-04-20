@@ -78,57 +78,55 @@ def parseContaminant(contaminant_output):
     # hash containing as key the vector, as value a list of intervals
     vectint = {}
     for line in contaminant_output:
-        print(line)
-    return 1
-#     # get line from file
-#     decoded = line
-#     # Regexp for contig
-#     contig = re.compile(">Vector")
-#     # Regexp for finding lines starting with numbers
-#     numberstart = re.compile("^[0-9]")
-#     # Regexp for no match
-#     nohits = re.compile("No hits found")
-#     # Regexp for empty line
-#     emptyline = re.compile("^\s*$")
-#     # if we have a contig print / save it
-#     if contig.match(decoded):
-#         # parse contigname, split based on regex
-#         contigname = re.compile("\s+").split(decoded)[1]
-#         # check if we have vector hit by looking at the next line
-#         currentline = vecsec_output.readline()
-#         # if we have a hit go to next line
-#         if nohits.match(currentline):
-#             logging.info("skipping ", decoded, "since no hit\n",end="")
-#             continue
-#         # if we have hits, go through them till the next emptyline
-#         else:
-#             # We have at least one interval
-#             # parse the contig name
-#             intervals=[]
-#             currentline = vecsec_output.readline()
-#             while currentline:
-#                 # empty line exnds parsing
-#                 if emptyline.match(currentline):
-#                     break
-#                 # parse line
-#                 if numberstart.match(currentline):
-#                     # We got an interval
-#                     # get first two entries as intervals
-#                     tempintervals = re.compile("\s+").split(currentline)[:2]
-#                     # convert them to int
-#                     tempintervals = [int(x) for x in tempintervals]
-#                     # append
-#                     intervals.append(tempintervals)
-#                     # go to next line
-#                 currentline = vecsec_output.readline()
-#             # key, value of hash with intervals and contigname
-#             # fuseintervals
-#             vectint[contigname] = fuseinterval(intervals)
-# # return hash to next function for processing
-# return vectint
-
-
-
+        # get line from file
+        decoded = line
+        # Regexp for contig
+        contig = re.compile(">Vector")
+        # Regexp for finding lines starting with numbers
+        numberstart = re.compile("^[0-9]")
+        # Regexp for no match
+        nohits = re.compile("No hits found")
+        # Regexp for empty line
+        emptyline = re.compile("^\s*$")
+        # if we have a contig print / save its
+        if contig.match(decoded):
+            # parse contigname, split based on regex
+            contigname = re.compile("\s+").split(decoded)[1]
+            # check if we have vector hit by looking at the next line
+            currentline = vecsec_output.readline()
+            # if we have a hit go to next line
+            if nohits.match(currentline):
+                logging.info("skipping ", decoded, "since no hit\n",end="")
+                continue
+            # if we have hits, go through them till the next emptyline
+            else:
+                # We have at least one interval
+                # parse the contig name
+                intervals=[]
+                currentline = vecsec_output.readline()
+                while currentline:
+                    # empty line exnds parsing
+                    if emptyline.match(currentline):
+                        break
+                    # parse line
+                    if numberstart.match(currentline):
+                        # We got an interval
+                        # get first two entries as intervals
+                        tempintervals = re.compile("\s+").split(currentline)[:2]
+                        # convert them to int
+                        tempintervals = [int(x) for x in tempintervals]
+                        # append
+                        intervals.append(tempintervals)
+                        # go to next line
+                        currentline = vecsec_output.readline()
+                        # key, value of hash with intervals and contigname
+                        # fuseintervals
+                        vectint[contigname] = fuseinterval(intervals)
+                        # return hash to next function for processing
+                        return vectint
+                    
+                    
+                    
 
 
 
