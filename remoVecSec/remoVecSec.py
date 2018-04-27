@@ -1,5 +1,4 @@
-"""This module is responsible for generating the index of the genome
-of interest and running the mapping process
+"""This module is responsible for finding vector contamination in genomes
 """
 
 
@@ -12,6 +11,7 @@ import re
 from Bio import SeqIO
 import logging
 import argparse
+import removeUtils as rU
 
 
 def runVecSecPipe(genomefile, dbfile):
@@ -35,106 +35,7 @@ def runVecSecPipe(genomefile, dbfile):
     return io.TextIOWrapper(vecsec.stdout, encoding='utf-8')
 
 
-def runContaminant(genomefile, dbfile):
-    """
-    Run contaminant screening with a contaminant database on a genome. Return a filehandle
-    Args: genomfile(str) path of genomefile on which vecscreen is ran
-          dbfile(str) path to the vector database used by vecscreen
-    Returns a filehandle containing the output of vecscreen
-
-    """
-    # run blastn
-    blastn = subprocess.Popen(['blastn',
-                               '-query',  genomefile,
-                               '-db',  dbfile,
-                               '-task', 'megablast',
-                               '-word_size', "28",
-                               '-best_hit_overhang', "0.1",
-                               '-best_hit_score_edge', "0.1",
-                               '-dust',  "yes",
-                               '-evalue', "0.0001",
-                               '-perc_identity', "90.0",
-                               '-outfmt', "7 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"],
-                              stdout = subprocess.PIPE)
-    # filter blast results
-    awk = subprocess.Popen(['awk',
-                             '"($3>=98.0 && $4>=50)||($3>=94.0 && $4>=100)||($3>=90.0 && $4>=200)"'],
-                           stdin=blastn.stdout,
-                           stdout=subprocess.PIPE)
-    # return output of contaminant screening
-    return io.TextIOWrapper(awk.stdout, encoding='utf-8')
-
-
-
-def parseContaminant(contaminant_output):
-    """Parse the output of the contaminant screening
-    Args: contaminant_output output of blastn
-
-    Returns a dictionary with keys corresponding to the contigs
-    containing contaminant and value corresponding to the coordinates of
-    the vector inside the contig
-    
-    """
-    # hash containing as key the vector, as value a list of intervals
-    vectint = {}
-    for line in contaminant_output:
-        print(line)
-    return 1
-#     # get line from file
-#     decoded = line
-#     # Regexp for contig
-#     contig = re.compile(">Vector")
-#     # Regexp for finding lines starting with numbers
-#     numberstart = re.compile("^[0-9]")
-#     # Regexp for no match
-#     nohits = re.compile("No hits found")
-#     # Regexp for empty line
-#     emptyline = re.compile("^\s*$")
-#     # if we have a contig print / save it
-#     if contig.match(decoded):
-#         # parse contigname, split based on regex
-#         contigname = re.compile("\s+").split(decoded)[1]
-#         # check if we have vector hit by looking at the next line
-#         currentline = vecsec_output.readline()
-#         # if we have a hit go to next line
-#         if nohits.match(currentline):
-#             logging.info("skipping ", decoded, "since no hit\n",end="")
-#             continue
-#         # if we have hits, go through them till the next emptyline
-#         else:
-#             # We have at least one interval
-#             # parse the contig name
-#             intervals=[]
-#             currentline = vecsec_output.readline()
-#             while currentline:
-#                 # empty line exnds parsing
-#                 if emptyline.match(currentline):
-#                     break
-#                 # parse line
-#                 if numberstart.match(currentline):
-#                     # We got an interval
-#                     # get first two entries as intervals
-#                     tempintervals = re.compile("\s+").split(currentline)[:2]
-#                     # convert them to int
-#                     tempintervals = [int(x) for x in tempintervals]
-#                     # append
-#                     intervals.append(tempintervals)
-#                     # go to next line
-#                 currentline = vecsec_output.readline()
-#             # key, value of hash with intervals and contigname
-#             # fuseintervals
-#             vectint[contigname] = fuseinterval(intervals)
-# # return hash to next function for processing
-# return vectint
-
-
-
-
-
-
-
-
-def parseVecSec(vecsec_output):
+def parseVecSec(vecsec_output, dist):
     """Parse the output of vecscreen
     Args: vecsec_output output of vecsec
 
@@ -143,7 +44,8 @@ def parseVecSec(vecsec_output):
     the vector inside the contig
     """
     # hash containing as key the vector, as value a list of intervals
-    vectint={}
+    vectint = {}
+    # Go through file line by line
     for line in vecsec_output:
         # get line from file
         decoded = line
@@ -163,7 +65,7 @@ def parseVecSec(vecsec_output):
             currentline = vecsec_output.readline()
             # if we have a hit go to next line
             if nohits.match(currentline):
-                logging.info("skipping ", decoded, "since no hit\n",end="")
+                logging.info("skipping ", decoded, "since no hit\n", end="")
                 continue
             # if we have hits, go through them till the next emptyline
             else:
@@ -172,7 +74,7 @@ def parseVecSec(vecsec_output):
                 intervals=[]
                 currentline = vecsec_output.readline()
                 while currentline:
-                    # empty line exnds parsing
+                    # empty line ends parsing
                     if emptyline.match(currentline):
                         break
                     # parse line
@@ -188,50 +90,12 @@ def parseVecSec(vecsec_output):
                     currentline = vecsec_output.readline()
                 # key, value of hash with intervals and contigname
                 # fuseintervals
-                vectint[contigname] = fuseinterval(intervals)
+                vectint[contigname] = rU.fuseinterval(intervals, dist)
     # return hash to next function for processing
     return vectint
 
 
-def fuseinterval(intervals):
-    """
-    Check if two intervals are adjacent
-    if they are fuse it and return only one
-    interval
-    Args: intervals a list of intervals
-    Return a list of intervals
-    """
-    # if we have only one interval return it
-    if len(intervals) == 1:
-        return intervals
-    # sort based on the coordinate of the end of the interval
-    intervals = sorted(intervals,
-                       key=lambda interval: interval[1])
-
-    # go through interval, fuse the one that are adjacent
-    fuseintervals=[]
-    previnterval = intervals[0]
-    # check adjacent intervals and merge them, return a list of intervals
-    for interval in intervals[1:]:
-        # adjacency: end of previous + 1 = start of current interval
-        if int(previnterval[1]+1) == int(interval[0]):
-            previnterval[1] = interval[1]
-        else:
-            fuseintervals.append(previnterval)
-            previnterval = interval
-    # last element has to be appended too
-    fuseintervals.append(previnterval)
-    # reverse sort the interval, so that by
-    # removing the vector sequence, the coordinates are
-    # still actual.
-    fuseintervals = sorted(fuseintervals,
-                           key=lambda interval: interval[1], reverse=True)
-
-    # check how many intervals
-    return fuseintervals
-
-
-def correctfasta(vectint, records):
+def qcVector(vectint, records):
     """
     Given a set of vector interval and a genome to correct remove the
     sequence of the genomes overlapping with the vector intervals, if
@@ -242,46 +106,27 @@ def correctfasta(vectint, records):
     Return: corrected genome sequence. Check the warning to see if
     regions were not corrected
     """
-
-    # go through each sequence in genome file
+    tomodify = {}
     for record in records:
         if record in vectint:
+            modifications = {}
             # if contig in vectint
             # fuse interval
             fuseintervals = vectint[record]
             # begin or end +/- 10
             recordlength = len(records[record].seq)
-            # We cannot work directly on the records hash
-            # duplicate the sequence, and modify it
-            recordseq = records[record]
-            for interval in fuseintervals:
-                if interval[1] < 100:
-                    # correct sequence at the begining
-                    recordseq = recordseq[interval[1]:]
-                    # SeqIO.write(record,sys.stdout,"fasta")
-                elif interval[0] > recordlength-100:
-                    # correct sequence if at the end
-                    recordseq = recordseq[:interval[0]]
-                    # SeqIO.write(record,sys.stdout,"fasta")
-                else:
-                    # in the other case, return a warning and let the
-                    # user decide if the genome should be corrected or
-                    # not
-                    intervalstring = "{},{}".format(interval[0], interval[1])
-                    logging.warning("interval "
-                                    + intervalstring
-                                    + " on contig "
-                                    + record
-                                    + " is too far from the contig's end and will not be processed")
-            print(">"+recordseq.id)    
-            print(recordseq.seq)
-        else:
-            print(">"+record)
-            print(records[record].seq)
-
+            if fuseintervals[0][0] < 100:
+                # correct sequence at the begining
+                modifications["trim5"] = fuseintervals[0][1]
+            elif fuseintervals[-1][1] > recordlength-100:
+                modifications["trim3"] = fuseintervals[-1][0]
+            if len(modifications):
+                tomodify[record] = modifications
+    return tomodify
 
 
 def main(arguments):
+    # Parser 
     parser = argparse.ArgumentParser(
         description="remoVecSec is a small wrapper around vecscreen that allows to remove\n"
         + "vector contamination in assembled genome. It takes as input a genome\n"
@@ -295,24 +140,25 @@ def main(arguments):
                         '-v',
                         help="The vecscreen database",
                         type=str, required=False)
-    parser.add_argument('--dbcont',
-                        '-c',
-                        help="The contaminant database",
-                        type=str, required=False)
+    parser.add_argument('--dist',
+                        '-d',
+                        help="Maximal distance for merging two intervals",
+                        type=int,
+                        required=False,
+                        default=50)
     args = parser.parse_args(arguments)
     records = SeqIO.index(args.genomefile, "fasta")
+    dist = args.dist
     # Start analysis
     # Vectors
-    # f = runVecSecPipe(args.genomefile, args.dbvec)
-    # vectint = parseVecSec(f)
+    f = runVecSecPipe(args.genomefile, args.dbvec)
+    vectint = parseVecSec(f,dist)
     # Contaminant
-    f = runContaminant(args.genomefile, args.dbcont)
-    contint = parseContaminant(f)
-    # Mito
-    # rRNA
-
-    # correctfasta(vectint, records)
+    correctfasta(vectint, records)
 
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
+
+
+
