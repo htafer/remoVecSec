@@ -1,11 +1,12 @@
 """This script help removing contamination from assembled genomes
 """
 
-
-import remoVecSec as rV
+import remoVecSec.removeUtils as rU
+import remoVecSec.removeVec as rV
 import remoVecSec.removeContaminant as rC
-import removeMito as rM
-import removeUtils as rU
+import remoVecSec.removeMito as rM
+
+
 import argparse
 import sys
 from Bio import SeqIO

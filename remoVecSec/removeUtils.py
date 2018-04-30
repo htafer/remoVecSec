@@ -1,7 +1,8 @@
-import pprint
-import collections as co
 """This module contains utility functions
 """
+
+import pprint
+import collections as co
 
 
 def mergemodification(qcCont, qcVect, qcMit):
@@ -120,8 +121,9 @@ def correctfasta(vectint, records):
                 # duplicate the sequence, and modify it
                 recordseq = recordseq[vectint[record]["trim5"]:]
             # print modified sequence
-            print(">"+record)
-            print(recordseq.seq)
+            if len(recordseq.seq) > 0:
+                print(">"+record)
+                print(recordseq.seq)
         else:
             # print unmodified sequence
             print(">"+record)

@@ -9,7 +9,7 @@ import subprocess
 import re
 from Bio import SeqIO
 import argparse
-import removeUtils as rU
+import remoVecSec.removeUtils as rU
 import pprint
 from functools import reduce
 
